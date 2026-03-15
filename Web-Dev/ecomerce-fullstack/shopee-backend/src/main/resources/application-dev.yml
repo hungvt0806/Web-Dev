@@ -1,0 +1,61 @@
+# ── Dev Profile ───────────────────────────────────────────────
+spring:
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchRepositoriesAutoConfiguration
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 535323972934-2io82j453hmpn9kk517pfeaj8lsbp9ui.apps.googleusercontent.com
+            client-secret: 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
+            scope: email, profile
+            redirect-uri: "{baseUrl}/oauth2/callback/{registrationId}"
+
+logging:
+  level:
+    com.shopee.ecommerce: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+
+rate-limit:
+  public:  { capacity: 10000 }
+  auth:    { capacity: 10000 }
+  api:     { capacity: 10000 }
+  upload:  { capacity: 10000 }
+  search:  { capacity: 10000 }
+
+paypay:
+  api-key: dev-dummy-key
+  api-secret: dev-dummy-secret
+  merchant-id: dev-dummy-merchant
+  webhook-secret: dev-dummy-webhook-secret
+  webhook-url: http://localhost:8080/api/payments/paypay/webhook
+  redirect-url: http://localhost:3000/payment/result
+  sandbox: true
+
+app:
+  cors:
+    allowed-origins:
+      - http://localhost:3000
+      - http://localhost:5173
+      - http://localhost:5174
+
+management:
+  health:
+    elasticsearch:
+      enabled: false

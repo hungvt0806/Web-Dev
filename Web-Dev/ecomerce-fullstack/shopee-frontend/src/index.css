@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: #E8441A;
+    --color-ink:     #0A0A0A;
+    --color-ash:     #F5F3EE;
+    scroll-behavior: smooth;
+  }
+  * { box-sizing: border-box; }
+  html { font-family: 'DM Sans', sans-serif; }
+  body {
+    background-color: #F5F3EE;
+    color: #0A0A0A;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1,h2,h3,h4,h5,h6 { font-family: 'Syne', sans-serif; }
+  ::selection { background: #E8441A; color: #fff; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #E8E4DC; }
+  ::-webkit-scrollbar-thumb { background: #0A0A0A; border-radius: 3px; }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-ember text-white font-display font-semibold px-6 py-3 rounded-none
+           transition-all duration-150 hover:bg-ember-dark active:scale-95
+           focus:outline-none focus:ring-2 focus:ring-ember focus:ring-offset-2;
+  }
+  .btn-secondary {
+    @apply bg-transparent border-2 border-ink text-ink font-display font-semibold
+           px-6 py-3 rounded-none transition-all duration-150
+           hover:bg-ink hover:text-ash active:scale-95
+           focus:outline-none focus:ring-2 focus:ring-ink focus:ring-offset-2;
+  }
+  .btn-ghost {
+    @apply bg-transparent text-ink font-body font-medium px-4 py-2
+           hover:bg-black/5 rounded-sm transition-colors duration-150;
+  }
+  .input-field {
+    @apply w-full bg-white border-2 border-ink/20 rounded-none px-4 py-3
+           font-body text-ink placeholder:text-ink/40
+           focus:outline-none focus:border-ember transition-colors duration-150;
+  }
+  .card {
+    @apply bg-white border border-ash-dark overflow-hidden
+           transition-all duration-200 hover:shadow-lift;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-mono
+           font-medium uppercase tracking-wider;
+  }
+  .section-label {
+    @apply font-mono text-xs uppercase tracking-widest text-ink/40 mb-3;
+  }
+  .page-title {
+    @apply font-display text-4xl md:text-5xl font-bold text-ink leading-tight;
+  }
+  .skeleton {
+    @apply bg-gradient-to-r from-ash-dark via-ash to-ash-dark bg-[length:200%_100%]
+           animate-shimmer rounded-sm;
+  }
+}
+
+/* Staggered children animation utility */
+.stagger > * { opacity: 0; animation: fadeUp 0.5s ease forwards; }
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.10s; }
+.stagger > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger > *:nth-child(4) { animation-delay: 0.20s; }
+.stagger > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger > *:nth-child(6) { animation-delay: 0.30s; }
+.stagger > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger > *:nth-child(8) { animation-delay: 0.40s; }
+
+/* Noise overlay for textured backgrounds */
+.bg-noise::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+}

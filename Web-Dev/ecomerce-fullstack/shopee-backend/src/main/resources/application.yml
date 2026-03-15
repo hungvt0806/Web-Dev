@@ -1,0 +1,237 @@
+# ============================================================
+#  KURA Ecommerce — Base Application Configuration
+#  Profile-specific overrides in application-{dev,prod}.yml
+# ============================================================
+
+spring:
+  application:
+    name: shopee-ecommerce
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  # ── Database ──────────────────────────────────────────────
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:shopee_db}
+    username: ${DB_USERNAME:shopee_user}
+    password: ${DB_PASSWORD:shopee_pass}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: ${DB_POOL_MAX:20}
+      minimum-idle: ${DB_POOL_MIN:5}
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: ShopeeHikariPool
+      leak-detection-threshold: 60000   # Warn if connection held > 60s
+
+  # ── JPA / Hibernate ───────────────────────────────────────
+  jpa:
+    hibernate:
+      ddl-auto: validate    # ← changed from validate; revert to validate before production
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+          batch_size: 25               # Batch inserts/updates
+          fetch_size: 50               # Cursor fetch size
+        order_inserts: true
+        order_updates: true
+        types:
+          print:
+            banner: false
+
+  # ── Flyway ────────────────────────────────────────────────
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    out-of-order: false
+
+  # ── Redis ─────────────────────────────────────────────────
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+          max-wait: 1000ms
+
+  # ── Elasticsearch ─────────────────────────────────────────
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URI:http://localhost:9200}
+    username: ${ELASTICSEARCH_USERNAME:}
+    password: ${ELASTICSEARCH_PASSWORD:}
+    connection-timeout: 5s
+    socket-timeout: 30s
+
+  # ── Jackson ───────────────────────────────────────────────
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: NON_NULL
+    time-zone: UTC
+
+  # ── Mail ──────────────────────────────────────────────────
+  mail:
+    host: ${MAIL_HOST:smtp.sendgrid.net}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:apikey}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+
+  # ── File Upload (Spring MVC) ──────────────────────────────
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+  # ── OAuth2 ────────────────────────────────────────────────
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:your-google-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
+            scope: email, profile
+            redirect-uri: "{baseUrl}/oauth2/callback/{registrationId}"
+          facebook:
+            client-id: ${FACEBOOK_CLIENT_ID:your-facebook-client-id}
+            client-secret: ${FACEBOOK_CLIENT_SECRET:your-facebook-client-secret}
+            scope: email, public_profile
+            redirect-uri: "{baseUrl}/oauth2/callback/{registrationId}"
+        provider:
+          facebook:
+            authorization-uri: https://www.facebook.com/v18.0/dialog/oauth
+            token-uri: https://graph.facebook.com/v18.0/oauth/access_token
+            user-info-uri: https://graph.facebook.com/v18.0/me?fields=id,name,email,picture
+            user-name-attribute: id
+
+# ── Server ────────────────────────────────────────────────────
+server:
+  port: ${SERVER_PORT:8080}
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/plain
+    min-response-size: 1024
+  http2:
+    enabled: true
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never
+
+# ── Actuator / Observability ──────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers,caches
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true          # /actuator/health/liveness + /readiness (k8s)
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+      environment: ${SPRING_PROFILES_ACTIVE:dev}
+
+# ── SpringDoc ─────────────────────────────────────────────────
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    disable-swagger-default-url: true
+
+# ── Elasticsearch (custom) ────────────────────────────────────
+elasticsearch:
+  uris: ${ELASTICSEARCH_URI:http://localhost:9200}
+  username: ${ELASTICSEARCH_USERNAME:}
+  password: ${ELASTICSEARCH_PASSWORD:}
+
+# ── AWS ───────────────────────────────────────────────────────
+aws:
+  s3:
+    region:     ${AWS_REGION:ap-northeast-1}
+    bucket:     ${AWS_S3_BUCKET:shopee-media-prod}
+    access-key: ${AWS_ACCESS_KEY_ID:}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:}
+    cdn-url:    ${CDN_URL:}             # CloudFront base URL (optional)
+    endpoint:   ${AWS_S3_ENDPOINT:}    # LocalStack/MinIO override (dev)
+
+# ── Rate Limiting ─────────────────────────────────────────────
+rate-limit:
+  public:
+    capacity: ${RATE_LIMIT_PUBLIC:100}
+  auth:
+    capacity: ${RATE_LIMIT_AUTH:10}
+  api:
+    capacity: ${RATE_LIMIT_API:300}
+  upload:
+    capacity: ${RATE_LIMIT_UPLOAD:20}
+  search:
+    capacity: ${RATE_LIMIT_SEARCH:60}
+
+# ── App Custom Properties ─────────────────────────────────────
+app:
+  jwt:
+    secret:                  ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+    access-token-expiry-ms:  ${JWT_ACCESS_EXPIRY:900000}
+    refresh-token-expiry-ms: ${JWT_REFRESH_EXPIRY:2592000000}
+
+  cors:
+    allowed-origins:
+      - ${FRONTEND_URL:http://localhost:5173}
+      - ${ADMIN_URL:http://localhost:5174}
+
+  oauth2:
+    authorized-redirect-uris:
+      - ${FRONTEND_URL:http://localhost:5173}/oauth2/redirect
+
+  payment:
+    paypay:
+      api-key:     ${PAYPAY_API_KEY:your-api-key}
+      api-secret:  ${PAYPAY_API_SECRET:your-api-secret}
+      merchant-id: ${PAYPAY_MERCHANT_ID:your-merchant-id}
+      sandbox:     ${PAYPAY_SANDBOX:true}
+      base-url:    ${PAYPAY_BASE_URL:https://stg.paypay.ne.jp}
+
+  upload:
+    max-file-size: 10MB
+    allowed-types: image/jpeg,image/png,image/webp
+
+# ── Logging ───────────────────────────────────────────────────
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    root: WARN
+    com.shopee.ecommerce: INFO

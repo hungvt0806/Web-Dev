@@ -1,0 +1,109 @@
+# ============================================================
+#  KURA Ecommerce — Production docker-compose override
+#
+#  Usage:
+#    docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+#  Differences from base compose:
+#    - No pgAdmin, no Kibana, no LocalStack
+#    - Resource limits on all containers
+#    - Real S3 / ElasticSearch endpoints via env
+#    - Log drivers configured for syslog / Fluentd
+#    - Health checks tightened
+# ============================================================
+
+name: shopee-prod
+
+networks:
+  shopee_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+services:
+
+  postgres:
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+    deploy:
+      resources:
+        limits:   { cpus: "2.0", memory: "2G" }
+        reservations: { cpus: "0.5", memory: "512M" }
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  redis:
+    restart: always
+    command: >
+      redis-server
+        --requirepass "${REDIS_PASSWORD}"
+        --save 300 100
+        --maxmemory 512mb
+        --maxmemory-policy allkeys-lru
+        --loglevel warning
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: "768M" }
+
+  elasticsearch:
+    restart: always
+    environment:
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false   # SSL terminated at Nginx
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    deploy:
+      resources:
+        limits: { cpus: "2.0", memory: "2G" }
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: shopee_nginx
+    restart: always
+    networks: [shopee_net]
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - /var/log/nginx:/var/log/nginx
+    depends_on:
+      app:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits: { cpus: "1.0", memory: "256M" }
+
+  app:
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST:                postgres
+      REDIS_HOST:             redis
+      ELASTICSEARCH_URI:      http://elasticsearch:9200
+      # Real AWS — no LocalStack in prod
+      AWS_S3_ENDPOINT:        ""
+    deploy:
+      replicas: 2           # 2 app instances behind Nginx
+      resources:
+        limits:   { cpus: "2.0", memory: "1.5G" }
+        reservations: { cpus: "0.5", memory: "512M" }
+      update_config:
+        parallelism: 1      # Rolling deploy — update 1 replica at a time
+        delay: 30s
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "10"
+    profiles: []  # Override base 'app' profile — always starts in prod

@@ -1,0 +1,28 @@
+# Maven
+target/
+*.jar
+*.war
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Environment secrets — NEVER commit
+.env
+.env.dev
+.env.prod
+
+# SSL certificates
+nginx/ssl/
+
+# Logs
+*.log
+/var/log/
+
+# OS
+.DS_Store
+Thumbs.db
