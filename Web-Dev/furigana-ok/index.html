@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Japanese Learning Tool</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&family=Noto+Serif+JP:wght@400;600&family=DM+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ── HEADER ───────────────────────────────────────────────── -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo-mark">日</div>
+      <div class="header-text">
+        <h1 class="site-title">Japanese Learning Tool</h1>
+        <p class="site-subtitle">Furigana · Từ điển · Katakana · Đọc · Lưu từ vựng</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── MAIN ─────────────────────────────────────────────────── -->
+  <main class="main-container">
+
+    <!-- Section 1: Input -->
+    <section class="panel panel--input">
+      <div class="panel-label">
+        <span class="panel-num">01</span>
+        <span class="panel-title">Văn bản tiếng Nhật</span>
+      </div>
+      <textarea
+        id="inputText"
+        class="text-input"
+        placeholder="Nhập hoặc dán đoạn văn tiếng Nhật vào đây…&#10;例: コンピューターで日本語を勉強します。"
+        spellcheck="false"
+        rows="6"
+      ></textarea>
+      <div class="char-count"><span id="charCount">0</span> ký tự</div>
+    </section>
+
+    <!-- Section 2: Buttons -->
+    <section class="actions">
+      <button id="btnFurigana" class="btn btn--primary" title="Thêm Furigana bên trên mỗi từ có Kanji">
+        <svg class="btn-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M4 15h12M4 10h8M4 5h5" stroke-linecap="round"/>
+          <circle cx="16" cy="5" r="2.5"/>
+        </svg>
+        Thêm Furigana
+      </button>
+
+      <div class="btn-divider"></div>
+
+      <button id="btnTranslate" class="btn btn--secondary" title="Dịch toàn bộ câu sang tiếng Việt">
+        <svg class="btn-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M3 5h9M7 3v2M5 5c0 2.5 1 5 3 6.5M9 5c0 2.5-1 5-3 6.5" stroke-linecap="round"/>
+          <path d="M12 13l2-5 2 5M13 11.5h2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M17 17H11" stroke-linecap="round"/>
+        </svg>
+        Dịch sang Tiếng Việt
+      </button>
+
+      <!-- ── Text-to-Speech button ──────────────────────────────
+           .btn--tts        = idle state (indigo outline)
+           .btn--tts.speaking = active state (animated, red)
+           .btn-speak-label  = text node toggled by JS
+      ─────────────────────────────────────────────────────────── -->
+      <button id="btnSpeak" class="btn btn--tts" title="Đọc văn bản tiếng Nhật to">
+        <!-- Speaker wave icon -->
+        <svg class="btn-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M4 7.5v5l3.5 2.5V5L4 7.5z" stroke-linejoin="round"/>
+          <path d="M11 7a4 4 0 0 1 0 6" stroke-linecap="round"/>
+          <path d="M13.5 5a7 7 0 0 1 0 10" stroke-linecap="round"/>
+        </svg>
+        <span class="btn-speak-label">Đọc tiếng Nhật</span>
+      </button>
+
+      <button id="btnClear" class="btn btn--ghost" title="Xóa tất cả">
+        <svg class="btn-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round"/>
+        </svg>
+        Xóa
+      </button>
+    </section>
+
+    <!-- Loading bar -->
+    <div id="loadingBar" class="loading-bar" aria-hidden="true">
+      <div class="loading-bar__fill"></div>
+    </div>
+
+    <!-- Section 3: Output -->
+    <section class="panel panel--output">
+      <div class="panel-label">
+        <span class="panel-num">02</span>
+        <span class="panel-title" id="outputLabel">Kết quả</span>
+        <span class="output-mode-badge" id="outputBadge"></span>
+      </div>
+      <div id="outputArea" class="output-area">
+        <div class="output-placeholder">
+          <div class="placeholder-icon">⟨ ⟩</div>
+          <p>Kết quả hiển thị tại đây.</p>
+          <p class="placeholder-hint">Nhấn «Thêm Furigana» hoặc «Dịch» để bắt đầu.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tips -->
+    <aside class="tips-row">
+      <div class="tip">
+        <span class="tip-icon">✦</span>
+        <span>Di chuột → tooltip nghĩa. <strong>Nhấp chuột</strong> → popup với nút lưu từ vựng.</span>
+      </div>
+      <div class="tip">
+        <span class="tip-icon">✦</span>
+        <span>«Đọc tiếng Nhật» dùng Web Speech API — nhấn lần 2 để dừng.</span>
+      </div>
+      <div class="tip">
+        <span class="tip-icon">✦</span>
+        <span>Lưu từ vựng vào Google Sheets — cần cấu hình Apps Script URL.</span>
+      </div>
+    </aside>
+
+    <!-- ── SAVED VOCABULARY PANEL ──────────────────────────────
+         Hiển thị danh sách từ đã lưu trong phiên hiện tại.
+         Ẩn khi chưa có từ nào được lưu.
+    ─────────────────────────────────────────────────────────── -->
+    <section id="vocabPanel" class="vocab-panel" hidden>
+      <div class="vocab-panel__header">
+        <span class="vocab-panel__title">Từ vựng đã lưu</span>
+        <span class="vocab-panel__count" id="vocabCount">0 từ</span>
+        <button class="vocab-panel__clear" id="btnClearVocab" title="Xóa danh sách">Xóa tất cả</button>
+      </div>
+      <div class="vocab-list" id="vocabList"></div>
+    </section>
+
+  </main>
+
+  <!-- ================================================================
+       VOCAB SAVE POPUP  — appears on CLICK (not hover)
+       ================================================================
+       Shown when user clicks an underlined word.
+       Contains full word info + "Save to Google Sheets" button.
+
+       States of the save button:
+         default   — "👍 Lưu từ vựng"
+         saving    — spinner, disabled
+         saved     — "✓ Đã lưu"  (green, disabled)
+         duplicate — "Đã có trong danh sách" (muted, disabled)
+         error     — "Lỗi — thử lại"
+       ================================================================ -->
+  <div id="vocabPopup" class="vocab-popup" role="dialog" aria-modal="true" hidden>
+
+    <button class="popup-x-close" id="vocabPopupClose" aria-label="Đóng">×</button>
+
+    <!-- Word + reading at top -->
+    <div class="vp-word"    id="vpWord"></div>
+    <div class="vp-reading" id="vpReading"></div>
+
+    <!-- English meaning -->
+    <div class="vp-meaning" id="vpMeaning"></div>
+
+    <!-- Save button -->
+    <button class="vp-save-btn" id="vpSaveBtn">
+      <!-- Bookmark icon (SVG, toggled by JS) -->
+      <svg class="vp-save-icon" id="vpSaveIcon"
+           viewBox="0 0 20 20" fill="none"
+           stroke="currentColor" stroke-width="1.8">
+        <path d="M5 3h10a1 1 0 0 1 1 1v13l-6-3-6 3V4a1 1 0 0 1 1-1z"
+              stroke-linejoin="round"/>
+      </svg>
+      <span class="vp-save-label" id="vpSaveLabel">Lưu từ vựng</span>
+    </button>
+
+  </div>
+
+  <!-- ================================================================
+       HOVER TOOLTIP
+       Một element duy nhất, di chuyển theo chuột, hiện/ẩn qua JS.
+       Không có close button — ẩn tự động khi chuột rời khỏi từ.
+
+       Cấu trúc:
+         .tooltip-word     — từ lớn (ví dụ: 勉強)
+         .tooltip-reading  — cách đọc  (べんきょう)
+         .tooltip-english  — nghĩa Anh [PRIMARY]
+         .tooltip-pos      — từ loại
+         .tooltip-spinner  — hiển thị khi đang fetch API
+       ================================================================ -->
+  <div id="tooltip" class="word-tooltip" role="tooltip" aria-live="polite" hidden>
+
+    <!-- Word display (large, top of tooltip) -->
+    <div class="tooltip-word" id="tooltipWord"></div>
+
+    <!-- Reading in hiragana -->
+    <div class="tooltip-reading" id="tooltipReading"></div>
+
+    <!-- English meaning — PRIMARY display -->
+    <div class="tooltip-english" id="tooltipEnglish"></div>
+
+    <!-- Part of speech — small muted label -->
+    <div class="tooltip-pos" id="tooltipPOS"></div>
+
+    <!-- Loading spinner — shown while API fetch is in flight -->
+    <div class="tooltip-spinner" id="tooltipSpinner" hidden>
+      <div class="dot-spin">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
